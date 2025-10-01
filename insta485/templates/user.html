@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <a href="{{ url_for('show_index') }}">Insta485</a>
+        <a href="/explore/">explore</a>
+        <a href="{{ url_for('show_user', user=logname) }}">{{ logname }}</a>
+    </nav>
+
+    <!-- User Profile -->
+    <div class="user-profile">
+        <h1>{{ user.username }}</h1>
+        
+        <!-- Relationship Status -->
+        {% if logname != user.username %}
+            {% if is_following %}
+                <p>following</p>
+                <p><em>Follow/unfollow buttons (coming soon)</em></p>
+            {% else %}
+                <p>not following</p>
+                <p><em>Follow/unfollow buttons (coming soon)</em></p>
+            {% endif %}
+        {% endif %}
+
+        <!-- Stats -->
+        <div class="stats">
+            <p>{{ post_count }} {% if post_count == 1 %}post{% else %}posts{% endif %}</p>
+            <p><a href="{{ url_for('show_followers', user=user.username) }}">{{ follower_count }} {% if follower_count == 1 %}follower{% else %}followers{% endif %}</a></p>
+            <p><a href="{{ url_for('show_following', user=user.username) }}">{{ following_count }} following</a></p>
+        </div>
+
+        <!-- User Info -->
+        <div class="user-info">
+            <p><strong>{{ user.fullname }}</strong></p>
+        </div>
+
+        <!-- Own User Actions -->
+        {% if logname == user.username %}
+            <div class="user-actions">
+                <p>Edit profile</p>
+                
+                <!-- Logout Form -->
+                <form action="/accounts/logout/" method="post" enctype="multipart/form-data">
+                    <input type="submit" name="logout" value="Logout"/>
+                </form>
+                
+                <!-- File Upload Form -->
+                <form action="/posts/?target={{ url_for('show_user', user=logname) }}" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file" accept="image/*" required/>
+                    <input type="submit" name="create_post" value="upload new post"/>
+                    <input type="hidden" name="operation" value="create"/>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Posts -->
+    <div class="posts">
+        {% if posts %}
+            {% for post in posts %}
+                <div class="post-thumbnail">
+                    <a href="/posts/{{ post.postid }}/">
+                        <img src="{{ url_for('show_uploads', filename=post.filename) }}" alt="Post {{ post.postid }}">
+                    </a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No posts yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

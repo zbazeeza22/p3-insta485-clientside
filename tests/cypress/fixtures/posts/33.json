@@ -1,0 +1,17 @@
+{
+  "comments": [],
+  "comments_url": "/api/v1/comments/?postid=33",
+  "created": "2025-09-21 12:00:00",
+  "imgUrl": "/uploads/4ef62485e76c4320af6085ac7822cc57.png",
+  "likes": {
+    "lognameLikesThis": false,
+    "numLikes": 0,
+    "url": "/api/v1/likes/193/"
+  },
+  "owner": "awdeorio",
+  "ownerImgUrl": "/uploads/0d02a5a4bb6b460abf9160522ad9d324.png",
+  "ownerShowUrl": "/users/awdeorio/",
+  "postShowUrl": "/posts/33/",
+  "postid": 33,
+  "url": "/api/v1/posts/33/"
+}
