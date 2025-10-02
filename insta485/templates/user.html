@@ -1,78 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <!-- Navigation -->
-    <nav>
-        <a href="{{ url_for('show_index') }}">Insta485</a>
-        <a href="/explore/">explore</a>
-        <a href="{{ url_for('show_user', user=logname) }}">{{ logname }}</a>
-    </nav>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/css/style.css">
+        <title>insta485</title>
+  
 
-    <!-- User Profile -->
-    <div class="user-profile">
-        <h1>{{ user.username }}</h1>
         
-        <!-- Relationship Status -->
-        {% if logname != user.username %}
-            {% if is_following %}
-                <p>following</p>
-                <p><em>Follow/unfollow buttons (coming soon)</em></p>
+    </head>
+    <body>
+        <h1 id="main-title">Insta485</h1>
+            <a href="/">
+                <img src="/static/images/logo.png" alt="Logo">
+            </a>
+        <a href="/explore/">explore</a>
+        <a href="/users/{{ logname }}/">{{ logname }}</a>
+        
+        <h1>{{ username }}</h1>
+        <div>
+            
+            {% if logname != username %}
+                {% if logname_follows_username %}
+                    <p>following</p>
+                    <form action="/following/?target=/users/{{ username }}/" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="submit" name="unfollow" value="unfollow"/>
+                        <input type="hidden" name="username" value="{{ username }}"/>
+                        <input type="hidden" name="operation" value="unfollow"/>
+                    </form>
+                {% else %}
+                    <p>not following</p>
+                    <form action="/following/?target=/users/{{ username }}/" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="submit" name="follow" value="follow"/>
+                        <input type="hidden" name="username" value="{{ username }}"/>
+                        <input type="hidden" name="operation" value="follow"/>
+                    </form>
+                {% endif %}
+
             {% else %}
-                <p>not following</p>
-                <p><em>Follow/unfollow buttons (coming soon)</em></p>
-            {% endif %}
-        {% endif %}
-
-        <!-- Stats -->
-        <div class="stats">
-            <p>{{ post_count }} {% if post_count == 1 %}post{% else %}posts{% endif %}</p>
-            <p><a href="{{ url_for('show_followers', user=user.username) }}">{{ follower_count }} {% if follower_count == 1 %}follower{% else %}followers{% endif %}</a></p>
-            <p><a href="{{ url_for('show_following', user=user.username) }}">{{ following_count }} following</a></p>
-        </div>
-
-        <!-- User Info -->
-        <div class="user-info">
-            <p><strong>{{ user.fullname }}</strong></p>
-        </div>
-
-        <!-- Own User Actions -->
-        {% if logname == user.username %}
-            <div class="user-actions">
-                <p>Edit profile</p>
-                
-                <!-- Logout Form -->
+                <p><strong><a href="/accounts/edit/">Edit profile</a></strong></p>
                 <form action="/accounts/logout/" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="submit" name="logout" value="Logout"/>
                 </form>
-                
-                <!-- File Upload Form -->
-                <form action="/posts/?target={{ url_for('show_user', user=logname) }}" method="post" enctype="multipart/form-data">
-                    <input type="file" name="file" accept="image/*" required/>
-                    <input type="submit" name="create_post" value="upload new post"/>
-                    <input type="hidden" name="operation" value="create"/>
-                </form>
-            </div>
-        {% endif %}
-    </div>
 
-    <!-- Posts -->
-    <div class="posts">
-        {% if posts %}
-            {% for post in posts %}
-                <div class="post-thumbnail">
-                    <a href="/posts/{{ post.postid }}/">
-                        <img src="{{ url_for('show_uploads', filename=post.filename) }}" alt="Post {{ post.postid }}">
-                    </a>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>No posts yet.</p>
+            {% endif %}
+
+            
+            <p>{{total_posts}} post{{ '' if total_posts == 1 else 's' }} 
+                <strong>
+                    <a href="/users/{{username}}/followers/">{{ followers }} follower{{ '' if followers == 1 else 's' }}</a> 
+                    <a href="/users/{{username}}/following/">{{following}} following</a>
+                </strong>
+            </p>
+            
+        </div>
+        <p>{{ fullname }}</p>
+
+        {# ---- Upload form: only for the owner of the page ---- #}
+        {% if logname == username %}
+        <form action="/posts/?target=/users/{{ username }}/" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="file" name="file" accept="image/*" required>
+            <input type="submit" name="create_post" value="upload new post">
+            <input type="hidden" name="operation" value="create">
+        </form>
         {% endif %}
-    </div>
-</body>
+
+        {% if posts|length == 0 %}
+            <p>No posts yet.</p>   {# exact text inc. period to satisfy the test #}
+        {% else %}
+
+            {% for post in posts %}
+                <a href="/posts/{{ post.id }}/"><img src="{{post.img_url}}" alt="post img" width="300" height="250"></a>
+            
+            {% endfor %}
+        {% endif %}
+    </body>
 </html>

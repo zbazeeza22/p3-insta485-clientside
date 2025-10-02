@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/static/css/style.css">
+        <title>insta485</title>
+  
+
+        
+    </head>
+    <body>
+        <h1 id="main-title">Insta485</h1>
+            <a href="/">
+                <img src="/static/images/logo.png" alt="Logo">
+            </a>
+            <!-- <a href="/">Home</a> -->
+        <a href="/explore/">explore</a>
+        <a href="/users/{{ logname }}/">{{ logname }}</a>
+        
+        <h1>Discover People</h1>
+        
+        {% for person in not_following %}
+        <div class="not_following">
+            <img src="{{ person.user_img_url }}" alt="{{person.username}} profile picture" width="100" height="100">
+            <p><strong>
+                <a href="/users/{{person.username}}/">{{ person.username }}</a>
+            </strong></p>
+
+            <form action="/following/?target=/explore/" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="submit" name="follow" value="follow"/>
+                <input type="hidden" name="username" value="{{ person.username }}"/>
+                <input type="hidden" name="operation" value="follow"/>
+            </form>
+                        
+            
+        </div>
+        
+        
+        {% endfor %}
+    </body>
+</html>

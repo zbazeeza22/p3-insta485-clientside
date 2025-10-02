@@ -16,30 +16,30 @@
         <a href="/explore/">explore</a>
         <a href="/users/{{ logname }}/">{{ logname }}</a>
         
-        <h1>Following</h1>
+        <h1>Followers</h1>
         
-        {% for user in following %}
-        <div class="following">
-            <img src="{{user.user_img_url}}" alt="{{user.username}} profile picture" width="100" height="100">
+        {% for follower in followers %}
+        <div class="follower">
+            <img src="{{follower.user_img_url}}" alt="{{follower.username}} profile picture" width="100" height="100">
             <p><strong>
-                <a href="/users/{{user.username}}/">{{ user.username }}</a>
+                <a href="/users/{{follower.username}}/">{{ follower.username }}</a>
             </strong></p>
             <div class="relationship">
-                {% if logname != user.username %}
-                    {% if user.logname_follows_username %}
+                {% if logname != follower.username %}
+                    {% if follower.logname_follows_username %}
                         <span>following</span>
-                        <form action="/following/?target=/users/{{ username }}/following/" method="post" enctype="multipart/form-data">
+                        <form action="/following/?target=/users/{{ username }}/followers/" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="submit" name="unfollow" value="unfollow"/>
-                            <input type="hidden" name="username" value="{{ user.username }}"/>
+                            <input type="hidden" name="username" value="{{ follower.username }}"/>
                             <input type="hidden" name="operation" value="unfollow"/>
                         </form>
                     {% else %}
                         <span>not following</span>
-                        <form action="/following/?target=/users/{{ username }}/following/" method="post" enctype="multipart/form-data">
+                        <form action="/following/?target=/users/{{ username }}/followers/" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="submit" name="follow" value="follow"/>
-                            <input type="hidden" name="username" value="{{user.username}}"/>
+                            <input type="hidden" name="username" value="{{follower.username}}"/>
                             <input type="hidden" name="operation" value="follow"/>
                         </form>
                     {% endif %}

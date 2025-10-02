@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/static/css/style.css">
+        <title>insta485</title>
+  
+
+        
+    </head>
+    <body>
+        <h1 id="main-title">Insta485</h1>
+            <a href="/">
+                <img src="/static/images/logo.png" alt="Logo">
+            </a>
+            <!-- <a href="/">Home</a> -->
+        <p><strong>login</a></strong></p>
+        <!-- <a href="/account/login/">Login</a> -->
+        
+        <!-- <ul>
+        <li>Username</li>
+        <li>Password</li>
+        </ul> -->
+
+        <!-- <form action="/accounts/?target=/" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="username" required/>
+            <input type="password" name="password" required/>
+            <input type="submit" value="login"/>
+            <input type="hidden" name="operation" value="login"/>
+        </form>  -->
+
+        <form action="/accounts/?target=/" method="post" enctype="multipart/form-data" class="login-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="operation" value="login">
+
+            <div class="field">
+                <label for="username">Username</label>
+                <input type="text" name="username" required/>
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input type="password" name="password" required/>
+            </div>
+
+            <button type="submit" class="btn">login</button>
+        </form>
+
+        <input type="hidden" name="operation" value="login"/>
+        </form>
+
+        <p>Don't have an account? <strong><a href="/accounts/create/">Sign up</a></strong></p>
+
+    </body>
+</html>

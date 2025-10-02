@@ -6,7 +6,10 @@ import pathlib
 APPLICATION_ROOT = '/'
 
 # Secret key for encrypting cookies
-SECRET_KEY = b'FIXME SET WITH: $ python3 -c "import os; print(os.urandom(24))" '
+SECRET_KEY = (
+    b'\x8c\xfbr\x80\x12\x83\xdf\xd7\xa6\xf7\xc9\x00\x11\x0f#\x06'
+    b'\x1b\xf0:z\x83i3\x97'
+)
 SESSION_COOKIE_NAME = 'login'
 
 # File Upload to var/uploads/
@@ -18,4 +21,5 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 # Database file is var/insta485.sqlite3
 DATABASE_FILENAME = INSTA485_ROOT/'var'/'insta485.sqlite3'
 
-
+# Disable CSRF protection for REST API
+WTF_CSRF_ENABLED = False

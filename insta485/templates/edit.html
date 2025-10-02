@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/static/css/style.css">
+        <title>insta485</title>
+  
+
+        
+    </head>
+    <body>
+        <h1 id="main-title">Insta485</h1>
+            <a href="/">
+                <img src="/static/images/logo.png" alt="Logo">
+            </a>
+            <!-- <a href="/">Home</a> -->
+        <a href="/explore/">explore</a>
+        <a href="/users/{{ logname }}/">{{ logname }}</a>
+        
+        <section>
+        <a href="/users/{{ logname }}/"><img src="{{ url_for('uploads', filename=filename) }}" alt="{{ logname }} profile picture" width="100" height="100"></a>
+        <p><strong>{{logname}}</strong></p>
+        
+        <!-- <form action="/accounts/?target=/accounts/edit/" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="file" name="file" accept="image/*"/>
+            <input type="text" name="fullname" value="{{ fullname }}" required/>
+            <input type="text" name="email" value="{{ email }}" required/>
+            <input type="submit" name="update" value="submit"/>
+            <input type="hidden" name="operation" value="edit_account"/>
+        </form> -->
+
+        <form action="/accounts/?target=/accounts/edit/" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="field">
+                <label for="file">Avatar</label>
+                <input type="file" id="file" name="file" accept="image/*"/>
+            </div>
+
+            <div class="field">
+                <label for="fullname">Full name</label>
+                <input type="text" id="fullname" name="fullname" value="{{ fullname }}" required/>
+            </div>
+
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="text" id="email" name="email" value="{{ email }}" required/>
+            </div>
+
+            <input type="submit" name="update" value="submit"/>
+            <input type="hidden" name="operation" value="edit_account"/>
+        </form>
+
+        <p><strong><a href="/accounts/password/">Change password</a></strong></p>
+        <p><strong><a href="/accounts/delete/">Delete account</a></strong></p>
+
+        </section>
+    </body>
+</html>
