@@ -1,89 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <link rel="stylesheet" href="/css/style.css">
-        <title>insta485</title>
-  
-
-        
-    </head>
-    <body>
-        <h1 id="main-title">Insta485</h1>
-            <a href="/">
-                <img src="/static/images/logo.png" alt="Logo">
-            </a>
-        <a href="/explore/">explore</a>
-        <a href="/users/{{ logname }}/">{{ logname }}</a>
-        
-        <article>
-            <header>
-                <a href="/users/{{ owner }}/"><img src="{{owner_img_url}}" alt="{{ owner }} profile picture" width="100" height="100"></a>
-                <a href="/users/{{ owner }}/">{{owner}}</a>
-                
-                <a href="/posts/{{ postid }}/">{{timestamp}}</a>
-                
-            </header>
-            <img src="{{ img_url }}" alt="post img" width="500" height="500">
-            <p>{{ likes }} like{{ '' if likes == 1 else 's' }}</p>
-            <section class="comment">
-                {% for comment in comments %}
-                    <p><strong><a href="/users/{{ comment.owner }}/">{{ comment.owner }}</a></strong> {{ comment.text }}</p>
-                    {% if logname == comment.owner %}
-                        <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
-                        <form action="/comments/?target=/posts/{{ postid }}/" method="post" enctype="multipart/form-data">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="operation" value="delete"/>
-                            <input type="hidden" name="commentid" value="{{ comment.commentid }}"/>
-                            <input type="submit" name="uncomment" value="delete"/>
-                        </form>
-
-                    {% endif %}
-
-                {% endfor %}
-                
-                
-                
-
-                {% if liked_by_logname %}
-                <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
-                    <form action="/likes/?target=/posts/{{ postid }}/" method="post" enctype="multipart/form-data">
+</head>
+<body>
+    <h1 id="main-title">Insta485</h1>
+        <a href="/">
+            <img src="/static/images/logo.png" alt="Logo">
+        </a>
+    <a href="/explore/">explore</a>
+    <a href="/users/{{ logname }}/">{{ logname }}</a>
+    
+    <article>
+        <header>
+            <a href="/users/{{ owner }}/"><img src="{{owner_img_url}}" alt="{{ owner }} profile picture" width="100" height="100"></a>
+            <a href="/users/{{ owner }}/">{{owner}}</a>
+            
+            <a href="/posts/{{ postid }}/">{{timestamp}}</a>
+            
+        </header>
+        <img src="{{ img_url }}" alt="post img" width="500" height="500">
+        <p>{{ likes }} like{{ '' if likes == 1 else 's' }}</p>
+        <section class="comment">
+            {% for comment in comments %}
+                <p><strong><a href="/users/{{ comment.owner }}/">{{ comment.owner }}</a></strong> {{ comment.text }}</p>
+                {% if logname == comment.owner %}
+                    <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                    <form action="/comments/?target=/posts/{{ postid }}/" method="post" enctype="multipart/form-data">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="operation" value="unlike"/>
-                        <input type="hidden" name="postid" value="{{postid}}"/>
-                        <input type="submit" name="unlike" value="unlike"/>
+                        <input type="hidden" name="operation" value="delete"/>
+                        <input type="hidden" name="commentid" value="{{ comment.commentid }}"/>
+                        <input type="submit" name="uncomment" value="delete"/>
                     </form>
 
-
-                {% else %}
-                    <form action="/likes/?target=/posts/{{ postid }}/" method="post" enctype="multipart/form-data">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="operation" value="like"/>
-                        <input type="hidden" name="postid" value="{{postid}}"/>
-                        <input type="submit" name="like" value="like"/>
-                    </form>
-                                
                 {% endif %}
 
-                <form action="/comments/?target=/posts/{{ postid }}/" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="operation" value="create"/>
-                    <input type="hidden" name="postid" value="{{postid}}"/>
-                    <input type="text" name="text" required/>
-                    <input type="submit" name="comment" value="comment"/>
-                </form>
-            </section>
-            {% if logname == owner %}
-                <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
-                <form action="/posts/?target=/users/{{ logname }}/" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="operation" value="delete"/>
-                    <input type="hidden" name="postid" value="{{postid }}"/>
-                    <input type="submit" name="delete" value="delete this post"/>
-                </form>
+            {% endfor %}
             
+            
+            
+
+            {% if liked_by_logname %}
+            <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+                <form action="/likes/?target=/posts/{{ postid }}/" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="operation" value="unlike"/>
+                    <input type="hidden" name="postid" value="{{postid}}"/>
+                    <input type="submit" name="unlike" value="unlike"/>
+                </form>
+
+
+            {% else %}
+                <form action="/likes/?target=/posts/{{ postid }}/" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="operation" value="like"/>
+                    <input type="hidden" name="postid" value="{{postid}}"/>
+                    <input type="submit" name="like" value="like"/>
+                </form>
+                            
             {% endif %}
-        </article>
+
+            <form action="/comments/?target=/posts/{{ postid }}/" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="operation" value="create"/>
+                <input type="hidden" name="postid" value="{{postid}}"/>
+                <input type="text" name="text" required/>
+                <input type="submit" name="comment" value="comment"/>
+            </form>
+        </section>
+        {% if logname == owner %}
+            <!-- DO NOT CHANGE THIS (aside from where we say 'FIXME') -->
+            <form action="/posts/?target=/users/{{ logname }}/" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="operation" value="delete"/>
+                <input type="hidden" name="postid" value="{{postid }}"/>
+                <input type="submit" name="delete" value="delete this post"/>
+            </form>
         
-    </body>
-</html>
+        {% endif %}
+    </article>
+    
+</body>
