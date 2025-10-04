@@ -7,6 +7,12 @@ if [ ! -f var/insta485.sqlite3 ]; then
     exit 1
 fi
 
+# Set up trap to kill background processes on exit
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+
+# Start webpack in watch mode in the background
+npx webpack --watch &
+
 # start the Flask dev server
 export FLASK_APP=insta485
 export FLASK_ENV=development
