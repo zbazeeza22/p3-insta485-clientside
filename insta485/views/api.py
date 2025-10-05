@@ -1,153 +1,161 @@
 """
-Insta485 REST API views.
-
+Insta485 REST API.
 URLs include:
 /api/v1/
-/api/v1/posts/
-/api/v1/posts/<postid>/
-/api/v1/likes/
-/api/v1/comments/
+
 """
-import base64
+
+import os
 import hashlib
+import pathlib
 import hmac
+import uuid
+# from werkzeug.utils import secure_filename
 import flask
+import arrow
 import insta485
 
-
-def _check_auth():
-    """Check authentication using session or HTTP Basic Auth."""
+def check_authentication():
+    """Check if user is authenticated via session or HTTP Basic Auth."""
     # Check session first
     if "username" in flask.session:
-        return flask.session.get("username")
+        return flask.session["username"]
 
     # Check HTTP Basic Auth
-    auth_header = flask.request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Basic "):
-        try:
-            # Decode base64 credentials
-            credentials = base64.b64decode(auth_header[6:]).decode('utf-8')
-            username, password = credentials.split(':', 1)
+    if flask.request.authorization:
+        username = flask.request.authorization.username
+        password = flask.request.authorization.password
 
-            # Verify credentials
-            connection = insta485.model.get_db()
-            cur = connection.execute(
-                "SELECT password FROM users WHERE username = ?",
-                (username,)
-            )
-            row = cur.fetchone()
+        # Import verify_password from index.py
+        from insta485.views.index import verify_password
 
-            if row and _verify_password(password, row["password"]):
-                return username
-        except (ValueError, UnicodeDecodeError):
-            pass
+        connection = insta485.model.get_db()
+        user = connection.execute(
+            "SELECT password FROM users WHERE username = ?", (username,)
+        ).fetchone()
 
-    return None
+        if user and verify_password(password, user["password"]):
+            return username
+          
+    flask.abort(403)
 
 
-def _verify_password(submitted_plain: str, stored: str) -> bool:
-    """stored:sha512$<salt>$<hexdigest>."""
-    try:
-        algo, salt, digest = stored.split("$", 3)
-    except ValueError:
-        # no $, or malformed → treat as plaintext fallback (optional)
-        return hmac.compare_digest(stored, submitted_plain)
-
-    if algo != "sha512":
-        return False
-
-    salted = salt + submitted_plain
-    check = hashlib.sha512((salted).encode("utf-8")).hexdigest()
-    return hmac.compare_digest(check, digest)
-
-
-def _require_auth():
-    """Require authentication, return 403 if not authenticated."""
-    username = _check_auth()
-    if not username:
-        flask.abort(403)
-    return username
-
-
-@insta485.app.route('/api/v1/')
-def api_resources():
-    """List all available API resources."""
-    return flask.jsonify({
+@insta485.app.route("/api/v1/")
+def get_services():
+    """Return a list of services available."""
+    context = {
         "comments": "/api/v1/comments/",
         "likes": "/api/v1/likes/",
         "posts": "/api/v1/posts/",
-        "url": "/api/v1/"
-    })
+        "url": "/api/v1/",
+    }
+    return flask.jsonify(**context)
 
 
-@insta485.app.route('/api/v1/posts/')
-def api_posts_list():
-    """Return a list of posts with pagination."""
-    logname = _require_auth()
+@insta485.app.route("/api/v1/posts/")
+def get_posts():
+    """Return the 10 most recent posts from followed users."""
+    logname = check_authentication()
+
+    page = flask.request.args.get("page", 0, type=int)
+    size = flask.request.args.get("size", 10, type=int)
+    postid_lte = flask.request.args.get("postid_lte", type=int)
+
+    if size <= 0 or page < 0:
+        flask.abort(400)
+
     connection = insta485.model.get_db()
 
-    # Get query parameters
-    size = flask.request.args.get('size', 10, type=int)
-    page = flask.request.args.get('page', 0, type=int)
-    postid_lte = flask.request.args.get('postid_lte', type=int)
-
-    # Validate parameters
-    if size <= 0:
-        flask.abort(400)
-    if page < 0:
-        flask.abort(400)
-
-    # Build SQL query
-    where_conditions = [
-        "owner = ? OR owner IN (SELECT followee FROM following "
-        "WHERE follower = ?)"
-    ]
+    query = """
+        SELECT postid, filename, owner, created 
+        FROM posts 
+        WHERE (owner = ? OR owner IN (SELECT followee FROM following WHERE follower = ?))
+    """
     params = [logname, logname]
 
+    # Add postid_lte filter if provided
     if postid_lte is not None:
-        where_conditions.append("postid <= ?")
+        query += " AND postid <= ?"
         params.append(postid_lte)
 
-    where_clause = " AND ".join(where_conditions)
+    query += " ORDER BY postid DESC LIMIT ? OFFSET ?"
+    params.extend([size + 1, page * size])
 
-    # Get posts
-    cur = connection.execute(
-        f"SELECT postid FROM posts WHERE {where_clause} "
-        "ORDER BY created DESC, postid DESC "
-        "LIMIT ? OFFSET ?",
-        params + [size, page * size]
-    )
-    posts = cur.fetchall()
+    posts_row = connection.execute(query, params).fetchall()
 
-    # Check if there are more results
-    cur = connection.execute(
-        f"SELECT COUNT(*) as count FROM posts WHERE {where_clause}",
-        params
-    )
-    total_count = cur.fetchone()['count']
-    has_next = (page + 1) * size < total_count
+    print(f"DEBUG: len(posts_row)={len(posts_row)}, size={size}, len > size? {len(posts_row) > size}")
+    if len(posts_row) - size >= 0:
+        posts_row = posts_row[:size]
 
-    # Build next URL
-    next_url = ""
-    if has_next:
-        next_params = f"size={size}&page={page + 1}"
-        if postid_lte is not None:
-            next_params += f"&postid_lte={postid_lte}"
-        next_url = f"/api/v1/posts/?{next_params}"
+        next_postid_lte = postid_lte
+        if postid_lte is None and posts_row:
+            next_postid_lte = posts_row[0]["postid"]
 
-    # Build results
-    results = []
-    for post in posts:
-        results.append({
-            "postid": post['postid'],
-            "url": f"/api/v1/posts/{post['postid']}/"
-        })
+        next_params = []
+        next_params.append(f"size={size}")
+        next_params.append(f"page={page + 1}")
+        if next_postid_lte is not None:
+            next_params.append(f"postid_lte={next_postid_lte}")
 
+        next_url = f"/api/v1/posts/?{'&'.join(next_params)}"
+    else:
+        next_url = ""
+
+    posts = []
+    for post in posts_row:
+        posts.append(
+            {"postid": post["postid"], "url": f"/api/v1/posts/{post['postid']}/"}
+        )
+
+    current_params = []
+    t = False
+    if size != 10:
+        current_params.append(f"size={size}")
+        t = True
+    if page != 0:
+        if not t: current_params.append(f"size={size}")
+        current_params.append(f"page={page}")
+    if postid_lte is not None:
+        current_params.append(f"postid_lte={postid_lte}")
+
+    current_url = "/api/v1/posts/"
+    if current_params:
+        current_url += "?" + "&".join(current_params)
+
+    context = {"next": next_url, "results": posts, "url": current_url}
+    return flask.jsonify(**context)
+  
+  
+@insta485.app.route("/api/v1/likes/", methods=["POST"])
+def create_like():
+    "Create a like for a post."
+    logname = check_authentication()
+    
+    postid = flask.request.args.get("postid", type=int)
+    if postid is None:
+        flask.abort(400)
+    
+    connection = insta485.model.get_db()
+    post = connection.execute("SELECT postid FROM posts WHERE postid = ?", (postid,)).fetchone()
+    if post is None:
+        flask.abort(404)
+
+    user_like = connection.execute(
+        "SELECT likeid FROM likes WHERE postid = ? AND owner = ?", (postid, logname)).fetchone()
+    if user_like is not None:
+        return flask.jsonify({
+            "likeid": user_like["likeid"], 
+            "url": f"/api/v1/likes/{user_like['likeid']}/"}), 200
+    
+    connection.execute(
+        "INSERT INTO likes (postid, owner) VALUES (?, ?)", (postid, logname))
+
+    likeid = (connection.execute("SELECT last_insert_rowid()").fetchone())[0]
+    
     return flask.jsonify({
-        "next": next_url,
-        "results": results,
-        "url": "/api/v1/posts/"
-    })
+        "likeid": likeid,
+        "url": f"/api/v1/likes/{likeid}/"
+    }), 201
 
 
 @insta485.app.route('/api/v1/posts/<int:postid>/')
@@ -227,81 +235,6 @@ def api_posts_detail(postid):
         "url": f"/api/v1/posts/{postid}/"
     })
 
-
-@insta485.app.route('/api/v1/likes/', methods=['POST'])
-def api_likes_post():
-    """Create a like for a post."""
-    logname = _require_auth()
-    connection = insta485.model.get_db()
-
-    postid = flask.request.args.get('postid', type=int)
-    if not postid:
-        flask.abort(400)
-
-    # Check if post exists
-    cur = connection.execute(
-        "SELECT 1 FROM posts WHERE postid = ?",
-        (postid,)
-    )
-    if not cur.fetchone():
-        flask.abort(404)
-
-    # Check if already liked
-    cur = connection.execute(
-        "SELECT likeid FROM likes WHERE postid = ? AND owner = ?",
-        (postid, logname)
-    )
-    existing_like = cur.fetchone()
-
-    if existing_like:
-        return flask.jsonify({
-            "likeid": existing_like['likeid'],
-            "url": f"/api/v1/likes/{existing_like['likeid']}/"
-        }), 200
-
-    # Create new like
-    cur = connection.execute(
-        "INSERT INTO likes (owner, postid) VALUES (?, ?)",
-        (logname, postid)
-    )
-    likeid = cur.lastrowid
-    connection.commit()
-
-    return flask.jsonify({
-        "likeid": likeid,
-        "url": f"/api/v1/likes/{likeid}/"
-    }), 201
-
-
-@insta485.app.route('/api/v1/likes/<int:likeid>/', methods=['DELETE'])
-def api_likes_delete(likeid):
-    """Remove a like."""
-    logname = _require_auth()
-    connection = insta485.model.get_db()
-
-    # Check if like exists
-    cur = connection.execute(
-        "SELECT owner FROM likes WHERE likeid = ?",
-        (likeid,)
-    )
-    like = cur.fetchone()
-    if not like:
-        flask.abort(404)
-    
-    # Check if like belongs to logname
-    if like['owner'] != logname:
-        flask.abort(403)
-
-    # Delete the like
-    connection.execute(
-        "DELETE FROM likes WHERE likeid = ?",
-        (likeid,)
-    )
-    connection.commit()
-
-    return '', 204
-
-
 @insta485.app.route('/api/v1/comments/', methods=['POST'])
 def api_comments_post():
     """Create a comment for a post."""
@@ -375,3 +308,24 @@ def api_comments_delete(commentid):
     connection.commit()
 
     return '', 204
+  
+@insta485.app.route("/api/v1/likes/<int:likeid>/", methods=["DELETE"])
+def delete_like(likeid):
+    """Delete a like."""
+    logname = check_authentication()
+    
+    connection = insta485.model.get_db()
+    
+    like = connection.execute(
+        "SELECT owner FROM likes WHERE likeid = ?", (likeid,)
+    ).fetchone()
+    
+    if like is None:
+        flask.abort(404)
+    
+    if like["owner"] != logname:
+        flask.abort(403)
+    
+    connection.execute("DELETE FROM likes WHERE likeid = ?", (likeid,))
+    
+    return "", 204
