@@ -146,8 +146,12 @@ def create_like():
             "likeid": user_like["likeid"],
             "url": f"/api/v1/likes/{user_like['likeid']}/"}), 200
 
-    cur = connection.execute("INSERT INTO likes (postid, owner) VALUES (?, ?)",
-                             (postid, logname))
+    try:
+        cur = connection.execute("INSERT INTO likes (postid, owner) VALUES (?, ?)",
+                                 (postid, logname))
+        connection.commit()
+    except Exception as e:
+        flask.abort(500)
 
     likeid = cur.lastrowid
 
