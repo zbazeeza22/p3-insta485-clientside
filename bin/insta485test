@@ -3,14 +3,15 @@ set -Eeuo pipefail
 set -x
 
 # Python style checks
-pycodestyle -v insta485
-pydocstyle -v insta485
-pylint -v insta485
-
-# Python unit tests
-pytest -v --log-cli-level=INFO
+pycodestyle insta485
+pydocstyle insta485
+pylint insta485
 
 # JavaScript style checks
-npx eslint insta485/js
-npx prettier --check insta485/js
+npx eslint insta485/js/
+npx prettier --check insta485/js/
 
+# Python unit tests
+pytest -xvs
+
+echo "All tests passed!"
