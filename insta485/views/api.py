@@ -6,6 +6,7 @@ URLs include:
 
 """
 
+import sqlite3
 import flask
 import insta485
 from insta485.views.index import verify_password
@@ -78,7 +79,7 @@ def _build_pagination_urls(page, size, postid_lte, posts_row):
 @insta485.app.route("/api/v1/posts/")
 def get_posts():
     """Return the 10 most recent posts from followed users."""
-    logname = check_authentication()
+    username = check_authentication()
 
     page = flask.request.args.get("page", 0, type=int)
     size = flask.request.args.get("size", 10, type=int)
@@ -95,7 +96,7 @@ def get_posts():
         WHERE (owner = ? OR owner IN
         (SELECT followee FROM following WHERE follower = ?))
     """
-    params = [logname, logname]
+    params = [username, username]
 
     if postid_lte is not None:
         query += " AND postid <= ?"
@@ -125,7 +126,7 @@ def get_posts():
 @insta485.app.route("/api/v1/likes/", methods=["POST"])
 def create_like():
     """Create a like for a post."""
-    logname = check_authentication()
+    username = check_authentication()
 
     postid = flask.request.args.get("postid", type=int)
     if postid is None:
@@ -139,7 +140,7 @@ def create_like():
 
     user_like = connection.execute(
         "SELECT likeid FROM likes WHERE postid = ? AND owner = ?",
-        (postid, logname)).fetchone()
+        (postid, username)).fetchone()
 
     if user_like is not None:
         return flask.jsonify({
@@ -147,10 +148,11 @@ def create_like():
             "url": f"/api/v1/likes/{user_like['likeid']}/"}), 200
 
     try:
-        cur = connection.execute("INSERT INTO likes (postid, owner) VALUES (?, ?)",
-                                 (postid, logname))
+        cur = connection.execute(
+            "INSERT INTO likes (postid, owner) VALUES (?, ?)",
+            (postid, username))
         connection.commit()
-    except Exception as e:
+    except sqlite3.IntegrityError:
         flask.abort(500)
 
     likeid = cur.lastrowid
@@ -164,7 +166,7 @@ def create_like():
 @insta485.app.route('/api/v1/posts/<int:postid>/')
 def api_posts_detail(postid):
     """Return details for a specific post."""
-    logname = check_authentication()
+    username = check_authentication()
     connection = insta485.model.get_db()
 
     # Get post details
@@ -197,7 +199,7 @@ def api_posts_detail(postid):
     for comment in comments:
         comments_list.append({
             "commentid": comment['commentid'],
-            "lognameOwnsThis": comment['owner'] == logname,
+            "lognameOwnsThis": comment['owner'] == username,
             "owner": comment['owner'],
             "ownerShowUrl": f"/users/{comment['owner']}/",
             "text": comment['text'],
@@ -211,10 +213,10 @@ def api_posts_detail(postid):
     )
     num_likes = cur.fetchone()['num_likes']
 
-    # Check if logname likes this post
+    # Check if username likes this post
     cur = connection.execute(
         "SELECT likeid FROM likes WHERE postid = ? AND owner = ?",
-        (postid, logname)
+        (postid, username)
     )
     like_info = cur.fetchone()
 
@@ -242,7 +244,7 @@ def api_posts_detail(postid):
 @insta485.app.route('/api/v1/comments/', methods=['POST'])
 def api_comments_post():
     """Create a comment for a post."""
-    logname = check_authentication()
+    username = check_authentication()
     connection = insta485.model.get_db()
 
     postid = flask.request.args.get('postid', type=int)
@@ -270,7 +272,7 @@ def api_comments_post():
     # Create new comment
     cur = connection.execute(
         "INSERT INTO comments (owner, postid, text) VALUES (?, ?, ?)",
-        (logname, postid, text)
+        (username, postid, text)
     )
     commentid = cur.lastrowid
     connection.commit()
@@ -278,8 +280,8 @@ def api_comments_post():
     return flask.jsonify({
         "commentid": commentid,
         "lognameOwnsThis": True,
-        "owner": logname,
-        "ownerShowUrl": f"/users/{logname}/",
+        "owner": username,
+        "ownerShowUrl": f"/users/{username}/",
         "text": text,
         "url": f"/api/v1/comments/{commentid}/"
     }), 201
@@ -288,7 +290,7 @@ def api_comments_post():
 @insta485.app.route('/api/v1/comments/<int:commentid>/', methods=['DELETE'])
 def api_comments_delete(commentid):
     """Remove a comment."""
-    logname = check_authentication()
+    username = check_authentication()
     connection = insta485.model.get_db()
 
     # Check if comment exists
@@ -300,8 +302,8 @@ def api_comments_delete(commentid):
     if not comment:
         flask.abort(404)
 
-    # Check if comment belongs to logname
-    if comment['owner'] != logname:
+    # Check if comment belongs to username
+    if comment['owner'] != username:
         flask.abort(403)
 
     # Delete the comment
@@ -317,7 +319,7 @@ def api_comments_delete(commentid):
 @insta485.app.route("/api/v1/likes/<int:likeid>/", methods=["DELETE"])
 def delete_like(likeid):
     """Delete a like."""
-    logname = check_authentication()
+    username = check_authentication()
 
     connection = insta485.model.get_db()
 
@@ -328,7 +330,7 @@ def delete_like(likeid):
     if like is None:
         flask.abort(404)
 
-    if like["owner"] != logname:
+    if like["owner"] != username:
         flask.abort(403)
 
     connection.execute("DELETE FROM likes WHERE likeid = ?", (likeid,))
