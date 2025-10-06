@@ -7,40 +7,55 @@ export default function Feed() {
   const [nextUrl, setNextUrl] = useState("");
   const [hasMore, setHasMore] = useState(true);
 
+  // Load initial posts
   useEffect(() => {
-    fetch("/api/v1/posts/", { credentials: "same-origin" })
-      .then((response) => response.json())
-      .then((data) => {
-        setPosts(data.results);
-        setNextUrl(data.next); // ← Use the backend's "next" URL
-        setHasMore(data.next !== "");
-      });
+    loadPosts("/api/v1/posts/");
   }, []);
 
-  const fetchMorePosts = () => {
-    if (!nextUrl) return;
+  // Load posts function
+  const loadPosts = async (url) => {
+    try {
+      const response = await fetch(url, { credentials: "same-origin" });
+      if (!response.ok) throw Error(response.statusText);
 
-    fetch(nextUrl, { credentials: "same-origin" }) // ← Call backend's next URL
-      .then((response) => response.json())
-      .then((data) => {
+      const data = await response.json();
+
+      if (url === "/api/v1/posts/") {
+        // Initial load
+        setPosts(data.results);
+      } else {
+        // Load more posts
         setPosts((prevPosts) => [...prevPosts, ...data.results]);
-        setNextUrl(data.next); // ← Get next "next" URL
-        setHasMore(data.next !== "");
-      });
+      }
+
+      setNextUrl(data.next);
+      setHasMore(data.next !== "");
+    } catch (error) {
+      console.log("Error loading posts:", error);
+      setHasMore(false);
+    }
+  };
+
+  // Load more posts for infinite scroll
+  const loadMorePosts = () => {
+    if (nextUrl) {
+      loadPosts(nextUrl);
+    }
   };
 
   return (
-    <InfiniteScroll
-      dataLength={posts.length}
-      next={fetchMorePosts}
-      hasMore={hasMore}
-      loader={<h4>Loading...</h4>}
-    >
-      <div className="feed-container">
+    <div className="feed-container">
+      <InfiniteScroll
+        dataLength={posts.length}
+        next={loadMorePosts}
+        hasMore={hasMore}
+        loader={<div className="loading">Loading more posts...</div>}
+        endMessage={<div className="end-message">No more posts to load</div>}
+      >
         {posts.map((post) => (
           <Post key={post.postid} url={post.url} />
         ))}
-      </div>
-    </InfiniteScroll>
+      </InfiniteScroll>
+    </div>
   );
 }
