@@ -113,11 +113,11 @@ export default function Post({ url }) {
     if (!postData) return;
 
     const textInput = event.target.querySelector('input[name="text"]');
-    const text = textInput ? textInput.value.trim() : '';
+    const text = textInput ? textInput.value.trim() : "";
 
     if (!text) return;
 
-    console.log('Submitting comment:', text, 'for post:', postData.postid);
+    console.log("Submitting comment:", text, "for post:", postData.postid);
 
     try {
       const response = await fetch(
@@ -208,7 +208,11 @@ export default function Post({ url }) {
         <button data-testid="like-unlike-button" onClick={handleLike}>
           {postData.likes.lognameLikesThis ? "Unlike" : "Like"}
         </button>
-        <span>{postData.likes.numLikes === 1 ? '1 like' : `${postData.likes.numLikes} likes`}</span>
+        <span>
+          {postData.likes.numLikes === 1
+            ? "1 like"
+            : `${postData.likes.numLikes} likes`}
+        </span>
       </div>
 
       {/* Comments section */}
@@ -239,7 +243,7 @@ export default function Post({ url }) {
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              const form = e.target.closest('form');
+              const form = e.target.closest("form");
               handleCommentSubmit({ target: form, preventDefault: () => {} });
             }
           }}

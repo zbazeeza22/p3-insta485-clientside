@@ -6,6 +6,7 @@ URLs include:
 
 """
 
+import sqlite3
 import flask
 import insta485
 from insta485.views.index import verify_password
@@ -147,10 +148,11 @@ def create_like():
             "url": f"/api/v1/likes/{user_like['likeid']}/"}), 200
 
     try:
-        cur = connection.execute("INSERT INTO likes (postid, owner) VALUES (?, ?)",
-                                 (postid, logname))
+        cur = connection.execute(
+            "INSERT INTO likes (postid, owner) VALUES (?, ?)",
+            (postid, logname))
         connection.commit()
-    except Exception as e:
+    except sqlite3.IntegrityError:
         flask.abort(500)
 
     likeid = cur.lastrowid
