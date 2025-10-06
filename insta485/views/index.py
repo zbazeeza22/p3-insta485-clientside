@@ -24,21 +24,32 @@ import insta485
 #         abort(403)  # bad token
 
 
+def check_session_user_exists():
+    """Check if session user still exists in database."""
+    username = flask.session.get("username")
+    if username:
+        connection = insta485.model.get_db()
+        user = connection.execute(
+            "SELECT username FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
+
+        if user is None:
+            # User was deleted from database - clear session
+            flask.session.clear()
+            return None
+    return username
+
+
 @insta485.app.route('/')
 def show_index():
     """Display / route."""
-    # Connect to database
-    if "username" not in flask.session:
-        # optional: preserve target so you come back after logging in
+    logname = check_session_user_exists()
+    if not logname:
         return flask.redirect("/accounts/login/?target=/", code=302)
+
     connection = insta485.model.get_db()
 
-    # Query database
-    logname = flask.session.get("username")
-
-    if not logname:
-
-        flask.abort(403)
     posts_row = connection.execute(
         "SELECT postid, filename, owner, created "
         "FROM posts "
