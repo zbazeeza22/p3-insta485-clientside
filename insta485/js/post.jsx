@@ -188,13 +188,12 @@ export default function Post({ url }) {
       </div>
 
       {/* Post image with double-click to like */}
-      <a href={postData.postShowUrl}>
+
         <img
           src={postData.imgUrl}
           alt="post_image"
           onDoubleClick={handleDoubleClick}
         />
-      </a>
 
       {/* Likes section */}
       <div className="likes-section">

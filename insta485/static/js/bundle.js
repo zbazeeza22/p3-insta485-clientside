@@ -166,9 +166,6 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 
 dayjs__WEBPACK_IMPORTED_MODULE_6___default().extend((dayjs_plugin_relativeTime__WEBPACK_IMPORTED_MODULE_7___default()));
 dayjs__WEBPACK_IMPORTED_MODULE_6___default().extend((dayjs_plugin_utc__WEBPACK_IMPORTED_MODULE_8___default()));
-
-// The parameter of this function is an object with a string called url inside it.
-// url is a prop for the Post component.
 function Post(_ref) {
   var url = _ref.url;
   /* Display complete post with likes, comments, and interactive features */
@@ -193,7 +190,6 @@ function Post(_ref) {
     };
   }, []);
   (0,react__WEBPACK_IMPORTED_MODULE_5__.useEffect)(function () {
-    // Declare a boolean flag that we can use to cancel the API request.
     var ignoreStaleRequest = false;
     fetch(url, {
       credentials: "same-origin"
@@ -206,69 +202,11 @@ function Post(_ref) {
       }
     })["catch"](function (error) {
       console.log(error);
-      setLoading(false);
     });
     return function () {
       ignoreStaleRequest = true;
     };
   }, [url]);
-  var handleLikeChange = function handleLikeChange(newNumLikes, newIsLiked, newLikeid) {
-    setPost(function (prevPost) {
-      return _objectSpread(_objectSpread({}, prevPost), {}, {
-        likes: _objectSpread(_objectSpread({}, prevPost.likes), {}, {
-          numLikes: newNumLikes,
-          lognameLikesThis: newIsLiked,
-          url: newLikeid ? "/api/v1/likes/".concat(newLikeid, "/") : null
-        })
-      });
-    });
-  };
-  var handleImageDoubleClick = /*#__PURE__*/function () {
-    var _ref2 = (0,_babel_runtime_helpers_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])(/*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_3___default().mark(function _callee() {
-      var response, data, newNumLikes, _t;
-      return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_3___default().wrap(function (_context) {
-        while (1) switch (_context.prev = _context.next) {
-          case 0:
-            console.log("Double-click! Currently liked?", post.likes.lognameLikesThis); // ADD THIS LINE
-            if (post.likes.lognameLikesThis) {
-              _context.next = 6;
-              break;
-            }
-            _context.prev = 1;
-            _context.next = 2;
-            return fetch("/api/v1/likes/?postid=".concat(post.postid), {
-              method: 'POST',
-              credentials: 'same-origin'
-            });
-          case 2:
-            response = _context.sent;
-            if (!response.ok) {
-              _context.next = 4;
-              break;
-            }
-            _context.next = 3;
-            return response.json();
-          case 3:
-            data = _context.sent;
-            newNumLikes = post.likes.numLikes + 1;
-            handleLikeChange(newNumLikes, true, data.likeid);
-          case 4:
-            _context.next = 6;
-            break;
-          case 5:
-            _context.prev = 5;
-            _t = _context["catch"](1);
-            console.error('Error liking post:', _t);
-          case 6:
-          case "end":
-            return _context.stop();
-        }
-      }, _callee, null, [[1, 5]]);
-    }));
-    return function handleImageDoubleClick() {
-      return _ref2.apply(this, arguments);
-    };
-  }();
 
   // Handle like/unlike functionality
   var handleLike = /*#__PURE__*/function () {
@@ -374,14 +312,14 @@ function Post(_ref) {
             return _context2.abrupt("return");
           case 1:
             textInput = event.target.querySelector('input[name="text"]');
-            text = textInput ? textInput.value.trim() : '';
+            text = textInput ? textInput.value.trim() : "";
             if (text) {
               _context2.next = 2;
               break;
             }
             return _context2.abrupt("return");
           case 2:
-            console.log('Submitting comment:', text, 'for post:', postData.postid);
+            console.log("Submitting comment:", text, "for post:", postData.postid);
             _context2.prev = 3;
             _context2.next = 4;
             return fetch("/api/v1/comments/?postid=".concat(postData.postid), {
@@ -501,18 +439,16 @@ function Post(_ref) {
     className: "profile-pic"
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("a", {
     href: postData.ownerShowUrl
-  }, postData.owner)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("a", {
-    href: postData.postShowUrl
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("img", {
+  }, postData.owner)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("img", {
     src: postData.imgUrl,
     alt: "post_image",
     onDoubleClick: handleDoubleClick
-  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
     className: "likes-section"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("button", {
     "data-testid": "like-unlike-button",
     onClick: handleLike
-  }, postData.likes.lognameLikesThis ? "Unlike" : "Like"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("span", null, postData.likes.numLikes === 1 ? '1 like' : "".concat(postData.likes.numLikes, " likes"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
+  }, postData.likes.lognameLikesThis ? "Unlike" : "Like"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("span", null, postData.likes.numLikes === 1 ? "1 like" : "".concat(postData.likes.numLikes, " likes"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
     className: "comments-section"
   }, postData.comments.map(function (comment) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
@@ -538,7 +474,7 @@ function Post(_ref) {
     onKeyDown: function onKeyDown(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        var form = e.target.closest('form');
+        var form = e.target.closest("form");
         handleCommentSubmit({
           target: form,
           preventDefault: function preventDefault() {}
