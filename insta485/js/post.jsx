@@ -36,7 +36,6 @@ export default function Post({ url }) {
       })
       .catch((error) => {
         console.log(error);
-        setLoading(false);
       });
 
     return () => {

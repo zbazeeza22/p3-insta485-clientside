@@ -150,7 +150,7 @@ def create_like():
     try:
         cur = connection.execute(
             "INSERT INTO likes (postid, owner) VALUES (?, ?)",
-            (postid, logname))
+            (postid, username))
         connection.commit()
     except sqlite3.IntegrityError:
         flask.abort(500)
@@ -334,5 +334,6 @@ def delete_like(likeid):
         flask.abort(403)
 
     connection.execute("DELETE FROM likes WHERE likeid = ?", (likeid,))
+    connection.commit()
 
     return "", 204
