@@ -188,13 +188,11 @@ export default function Post({ url }) {
       </div>
 
       {/* Post image with double-click to like */}
-
-        <img
-          src={postData.imgUrl}
-          alt="post_image"
-          onDoubleClick={handleDoubleClick}
-        />
-
+      <img
+        src={postData.imgUrl}
+        alt="post_image"
+        onDoubleClick={handleDoubleClick}
+      />
       {/* Likes section */}
       <div className="likes-section">
         <button data-testid="like-unlike-button" onClick={handleLike}>
@@ -244,7 +242,7 @@ export default function Post({ url }) {
 
       {/* Timestamp */}
       <div className="timestamp" data-testid="post-time-ago">
-        {formatTimestamp(postData.created)}
+        <a href={postData.postShowUrl}>{formatTimestamp(postData.created)}</a>
       </div>
     </div>
   );

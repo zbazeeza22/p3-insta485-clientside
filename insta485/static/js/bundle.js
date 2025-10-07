@@ -484,7 +484,9 @@ function Post(_ref) {
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("div", {
     className: "timestamp",
     "data-testid": "post-time-ago"
-  }, formatTimestamp(postData.created)));
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_5___default().createElement("a", {
+    href: postData.postShowUrl
+  }, formatTimestamp(postData.created))));
 }
 
 /***/ }),
